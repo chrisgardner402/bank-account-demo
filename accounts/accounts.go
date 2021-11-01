@@ -34,6 +34,25 @@ func (a *Account) Deposit(amount int) {
 	a.balance += amount
 }
 
+func (a *Account) deposit(amount int, c chan<- Account) {
+	a.balance += amount
+	c <- *a
+}
+
+// Deposit x amount to all accounts
+func DepositAll(accounts []Account, amount int) []Account {
+	var accountSlice []Account
+	c := make(chan Account)
+	for i := 0; i < len(accounts); i++ {
+		go accounts[i].deposit(amount, c)
+	}
+	for i := 0; i < len(accounts); i++ {
+		account := <-c
+		accountSlice = append(accountSlice, account)
+	}
+	return accountSlice
+}
+
 // Withdraw x amount from your account
 func (a *Account) Withdraw(amount int) error {
 	if a.balance < amount {
@@ -44,5 +63,5 @@ func (a *Account) Withdraw(amount int) error {
 }
 
 func (a Account) String() string {
-	return fmt.Sprint(a.Owner(), "'s account.\nHas: ", a.Balance())
+	return fmt.Sprint(a.Owner(), "'s account has: ", a.Balance())
 }

@@ -41,17 +41,16 @@ func (a *Account) Deposit(amount int) error {
 	return nil
 }
 
-func (a *Account) deposit(amount int, c chan<- Account) error {
-	if amount <= 0 {
-		return errNotPositive
-	}
+func (a *Account) deposit(amount int, c chan<- Account) {
 	a.balance += amount
 	c <- *a
-	return nil
 }
 
-// Deposit x amount to all accounts
-func DepositAll(accounts []Account, amount int) []Account {
+// MassDeposit x amount to all accounts
+func MassDeposit(accounts []Account, amount int) ([]Account, error) {
+	if amount <= 0 {
+		return nil, errNotPositive
+	}
 	var accountSlice []Account
 	c := make(chan Account)
 	for i := 0; i < len(accounts); i++ {
@@ -61,7 +60,7 @@ func DepositAll(accounts []Account, amount int) []Account {
 		account := <-c
 		accountSlice = append(accountSlice, account)
 	}
-	return accountSlice
+	return accountSlice, nil
 }
 
 // Withdraw x amount from your account

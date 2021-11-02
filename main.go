@@ -28,6 +28,7 @@ func main() {
 	e.GET("/health", handleHealthCheck)
 	e.POST("/account/deposit", handleDeposit)
 	e.POST("/account/withdraw", handleWithdraw)
+	e.POST("/mass/deposit", handleMassDeposit)
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
@@ -90,6 +91,40 @@ func handleWithdraw(c echo.Context) error {
 	// rendering
 	withdrawResponse := jsondata.WithdrawResponse{}
 	return c.JSON(http.StatusOK, withdrawResponse)
+}
+
+// handle mass deposit api
+func handleMassDeposit(c echo.Context) error {
+	massDepositRequest := new(jsondata.MassDepositRequest)
+	// binding
+	if err := c.Bind(&massDepositRequest); err != nil {
+		fmt.Println(err)
+		return err
+	}
+	// search for an account
+	accountSlice := []accounts.Account{}
+	for _, owner := range massDepositRequest.Owner {
+		account, err := myLedger.Search(owner)
+		// handle error
+		if errRes := returnErrRe(err); err != nil {
+			return c.JSON(http.StatusBadRequest, errRes)
+		}
+		accountSlice = append(accountSlice, account)
+	}
+	// execute mass deposit
+	accountSlice, err := accounts.MassDeposit(accountSlice, massDepositRequest.Amount)
+	// handle error
+	if errRes := returnErrRe(err); err != nil {
+		return c.JSON(http.StatusBadRequest, errRes)
+	}
+	// update ledger
+	for _, account := range accountSlice {
+		myLedger[account.Owner()] = account
+	}
+	myLedger.Print() // TODO remove
+	// rendering
+	massDepositResponse := jsondata.MassDepositReponse{}
+	return c.JSON(http.StatusOK, massDepositResponse)
 }
 
 // return error response

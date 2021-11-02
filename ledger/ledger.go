@@ -10,7 +10,7 @@ import (
 type Ledger map[string]accounts.Account
 
 var (
-	errNotFound    = errors.New("not found")
+	errNotFound    = errors.New("account not found")
 	errOwnerExists = errors.New("that owner already exists")
 )
 

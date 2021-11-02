@@ -37,3 +37,11 @@ type WithdrawRequest struct {
 
 type WithdrawResponse struct {
 }
+
+type MassDepositRequest struct {
+	Owner  []string `json:"owner"`
+	Amount int      `json:"amount"`
+}
+
+type MassDepositReponse struct {
+}

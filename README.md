@@ -1,9 +1,10 @@
 # bank-account-demo
 
 ## API
-- **POST** `/open`
-- **POST** `/deposit`
-- **POST** `/withdraw`
+- **GET** `/health`
+- **POST** `/account/deposit`
+- **POST** `/account/withdraw`
+- **POST** `/mass/deposit`
 
 ## Version
 - Language : `Go` _1.16_

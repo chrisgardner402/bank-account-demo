@@ -1,107 +1,102 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/chrisgardner402/bank-account-demo/accounts"
+	"github.com/chrisgardner402/bank-account-demo/jsondata"
+	"github.com/chrisgardner402/bank-account-demo/ledger"
 	"github.com/labstack/echo/v4"
 )
 
-type OpenRequest struct {
-	Owner string `json:"owner"`
-}
-
-type OpenResponse struct {
-	Owner   string `json:"owner"`
-	Balance int    `json:"balance"`
-}
-
-type AccountRequest struct {
-	Owner string `json:"owner"`
-}
-
-type AccountResponse struct {
-	Owner   string `json:"owner"`
-	Balance int    `json:"balance"`
-}
-
-type Ledger map[string]accounts.Account
-
-var myLedger Ledger
-
-var (
-	errNotFound    = errors.New("not found")
-	errOwnerExists = errors.New("that owner already exists")
-)
-
-// Search for an account
-func (l Ledger) Search(owner string) (accounts.Account, error) {
-	account, exists := l[owner]
-	if exists {
-		return account, nil
-	}
-	return accounts.Account{}, errNotFound
-}
-
-// Add an account to the ledger
-func (l Ledger) Add(account accounts.Account) error {
-	_, err := l.Search(account.Owner())
-	switch err {
-	case nil:
-		return errOwnerExists
-	case errNotFound:
-		l[account.Owner()] = account
-	}
-	return nil
-}
+// temporary data for storage
+var myLedger ledger.Ledger
 
 func main() {
-	myLedger = Ledger{}
+	// TODO remove
+	myLedger = ledger.Ledger{}
+	dali := accounts.NewAccount("dali")
+	van := accounts.NewAccount("van")
+	picasso := accounts.NewAccount("picasso")
+	myLedger.Add(*dali)
+	myLedger.Add(*van)
+	myLedger.Add(*picasso)
+	myLedger.Print()
 
 	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
-	})
-	e.POST("/open", openAccount)
-	e.POST("/account", getAccount)
+	e.GET("/health", handleHealthCheck)
+	e.POST("/account/deposit", handleDeposit)
+	e.POST("/account/withdraw", handleWithdraw)
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
-// open an account
-func openAccount(c echo.Context) error {
-	openRequest := new(OpenRequest)
-	if err := c.Bind(&openRequest); err != nil {
-		return err
-	}
-	account := accounts.NewAccount(openRequest.Owner)
-	myLedger.Add(*account)
-
-	fmt.Println(myLedger)
-
-	openResponse := OpenResponse{Owner: account.Owner(), Balance: account.Balance()}
-	return c.JSON(http.StatusCreated, openResponse)
+// handle health check
+func handleHealthCheck(c echo.Context) error {
+	return c.String(http.StatusOK, "OK")
 }
 
-// get an account
-func getAccount(c echo.Context) error {
-	accountRequest := new(AccountRequest)
-	if err := c.Bind(&accountRequest); err != nil {
+// handle deposit api
+func handleDeposit(c echo.Context) error {
+	depositRequest := new(jsondata.DepositRequest)
+	// binding
+	if err := c.Bind(&depositRequest); err != nil {
+		fmt.Println(err)
 		return err
 	}
+	// search for an account
+	account, err := myLedger.Search(depositRequest.Owner)
+	// handle error
+	if errRes := returnErrRe(err); err != nil {
+		return c.JSON(http.StatusBadRequest, errRes)
+	}
+	// execute deposit
+	err = account.Deposit(depositRequest.Amount)
+	// handle error
+	if errRes := returnErrRe(err); err != nil {
+		return c.JSON(http.StatusBadRequest, errRes)
+	}
+	// update ledger
+	myLedger[account.Owner()] = account
+	myLedger.Print() // TODO remove
+	// rendering
+	depositResponse := jsondata.DepositResponse{}
+	return c.JSON(http.StatusOK, depositResponse)
+}
 
-	fmt.Println(accountRequest.Owner)
-	fmt.Println(myLedger)
+// handle withdraw api
+func handleWithdraw(c echo.Context) error {
+	withdrawRequest := new(jsondata.WithdrawRequest)
+	// binding
+	if err := c.Bind(withdrawRequest); err != nil {
+		fmt.Println(err)
+		return err
+	}
+	// search for an account
+	account, err := myLedger.Search(withdrawRequest.Owner)
+	// handle error
+	if errRes := returnErrRe(err); err != nil {
+		return c.JSON(http.StatusBadRequest, errRes)
+	}
+	// execute withdraw
+	err = account.Withdraw(withdrawRequest.Amount)
+	// handle error
+	if errRes := returnErrRe(err); err != nil {
+		return c.JSON(http.StatusBadRequest, errRes)
+	}
+	// update ledger
+	myLedger[account.Owner()] = account
+	myLedger.Print() // TODO remove
+	// rendering
+	withdrawResponse := jsondata.WithdrawResponse{}
+	return c.JSON(http.StatusOK, withdrawResponse)
+}
 
-	account, err := myLedger.Search(accountRequest.Owner)
-	// TODO error handling
+// return error response
+func returnErrRe(err error) jsondata.ErrorResponse {
+	var errorResponse jsondata.ErrorResponse
 	if err != nil {
-		return err
+		errorResponse = jsondata.ErrorResponse{Message: err.Error()}
 	}
-
-	fmt.Println(account.String())
-
-	OpenResponse := OpenResponse{Owner: account.Owner(), Balance: account.Balance()}
-	return c.JSON(http.StatusOK, OpenResponse)
+	return errorResponse
 }

@@ -1,33 +1,107 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/chrisgardner402/bank-account-demo/accounts"
+	"github.com/labstack/echo/v4"
 )
 
+type OpenRequest struct {
+	Owner string `json:"owner"`
+}
+
+type OpenResponse struct {
+	Owner   string `json:"owner"`
+	Balance int    `json:"balance"`
+}
+
+type AccountRequest struct {
+	Owner string `json:"owner"`
+}
+
+type AccountResponse struct {
+	Owner   string `json:"owner"`
+	Balance int    `json:"balance"`
+}
+
+type Ledger map[string]accounts.Account
+
+var myLedger Ledger
+
+var (
+	errNotFound    = errors.New("not found")
+	errOwnerExists = errors.New("that owner already exists")
+)
+
+// Search for an account
+func (l Ledger) Search(owner string) (accounts.Account, error) {
+	account, exists := l[owner]
+	if exists {
+		return account, nil
+	}
+	return accounts.Account{}, errNotFound
+}
+
+// Add an account to the ledger
+func (l Ledger) Add(account accounts.Account) error {
+	_, err := l.Search(account.Owner())
+	switch err {
+	case nil:
+		return errOwnerExists
+	case errNotFound:
+		l[account.Owner()] = account
+	}
+	return nil
+}
+
 func main() {
-	var accountSlice []accounts.Account
+	myLedger = Ledger{}
 
-	account1 := accounts.NewAccount("owner1")
-	account2 := accounts.NewAccount("owner2")
-	account3 := accounts.NewAccount("owner3")
-	account4 := accounts.NewAccount("owner4")
-	account5 := accounts.NewAccount("owner5")
-	account6 := accounts.NewAccount("owner6")
-	account7 := accounts.NewAccount("owner7")
-	account8 := accounts.NewAccount("owner8")
-	account9 := accounts.NewAccount("owner9")
+	e := echo.New()
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, World!")
+	})
+	e.POST("/open", openAccount)
+	e.POST("/account", getAccount)
+	e.Logger.Fatal(e.Start(":1323"))
+}
 
-	accountSlice = append(accountSlice, *account1, *account2, *account3, *account4, *account5, *account6, *account7, *account8, *account9)
+// open an account
+func openAccount(c echo.Context) error {
+	openRequest := new(OpenRequest)
+	if err := c.Bind(&openRequest); err != nil {
+		return err
+	}
+	account := accounts.NewAccount(openRequest.Owner)
+	myLedger.Add(*account)
 
-	for _, account := range accountSlice {
-		fmt.Println(account.String())
+	fmt.Println(myLedger)
+
+	openResponse := OpenResponse{Owner: account.Owner(), Balance: account.Balance()}
+	return c.JSON(http.StatusCreated, openResponse)
+}
+
+// get an account
+func getAccount(c echo.Context) error {
+	accountRequest := new(AccountRequest)
+	if err := c.Bind(&accountRequest); err != nil {
+		return err
 	}
 
-	accountSlice = accounts.DepositAll(accountSlice, 1000)
+	fmt.Println(accountRequest.Owner)
+	fmt.Println(myLedger)
 
-	for _, account := range accountSlice {
-		fmt.Println(account.String())
+	account, err := myLedger.Search(accountRequest.Owner)
+	// TODO error handling
+	if err != nil {
+		return err
 	}
+
+	fmt.Println(account.String())
+
+	OpenResponse := OpenResponse{Owner: account.Owner(), Balance: account.Balance()}
+	return c.JSON(http.StatusOK, OpenResponse)
 }

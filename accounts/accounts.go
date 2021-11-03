@@ -34,9 +34,7 @@ func (a Account) Balance() int {
 
 // Deposit x amount on your account
 func (a *Account) Deposit(amount int) error {
-	if amount <= 0 {
-		return errNotPositive
-	}
+	CheckDeposit(amount)
 	a.balance += amount
 	return nil
 }
@@ -48,8 +46,8 @@ func (a *Account) deposit(amount int, c chan<- Account) {
 
 // MassDeposit x amount to all accounts
 func MassDeposit(accounts []Account, amount int) (*[]Account, error) {
-	if amount <= 0 {
-		return nil, errNotPositive
+	if err := checkAmount(amount); err != nil {
+		return nil, err
 	}
 	var accountSlice []Account
 	c := make(chan Account)
@@ -65,15 +63,34 @@ func MassDeposit(accounts []Account, amount int) (*[]Account, error) {
 
 // Withdraw x amount from your account
 func (a *Account) Withdraw(amount int) error {
-	if a.balance < amount {
-		return errNoMoney
-	} else if amount <= 0 {
-		return errNotPositive
-	}
+	a.CheckWithdraw(amount)
 	a.balance -= amount
 	return nil
 }
 
 func (a Account) String() string {
 	return fmt.Sprint(a.Owner(), "'s account has: ", a.Balance())
+}
+
+func CheckDeposit(amount int) error {
+	if err := checkAmount(amount); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Account) CheckWithdraw(amount int) error {
+	if a.balance < amount {
+		return errNoMoney
+	} else if err := checkAmount(amount); err != nil {
+		return err
+	}
+	return nil
+}
+
+func checkAmount(amount int) error {
+	if amount <= 0 {
+		return errNotPositive
+	}
+	return nil
 }

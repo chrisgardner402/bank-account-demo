@@ -6,6 +6,7 @@ import (
 
 	"github.com/chrisgardner402/bank-account-demo/jsondata"
 	"github.com/chrisgardner402/bank-account-demo/repository"
+	"github.com/chrisgardner402/bank-account-demo/validate"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,13 +22,13 @@ func handleWithdraw(c echo.Context) error {
 	if isBad, errBadReq := handleBadRequest(err, c); isBad {
 		return errBadReq
 	}
-	// before withdraw
-	err = account.Withdraw(withdrawRequest.Amount)
+	// validate request
+	err = validate.ValidateWithdraw(account, withdrawRequest.Amount)
 	if isBad, errBadReq := handleBadRequest(err, c); isBad {
 		return errBadReq
 	}
-	// update ledger
-	err = repository.UpdateAccount(&account)
+	// execute withdraw
+	err = repository.WithdrawAccount(&account, withdrawRequest.Amount)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}

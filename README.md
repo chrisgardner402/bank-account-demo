@@ -7,5 +7,7 @@
 - **POST** `/mass/deposit`
 
 ## Version
-- Language : `Go` _1.16_
+- Language : `Go` _v1.16_
 - Web Framework : `Echo` _v4.6.1_
+- Database : `SQLite` _v3.32.3_
+- Database Driver : `go-sqlite3` _v1.14.9_

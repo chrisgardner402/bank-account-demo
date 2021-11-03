@@ -16,9 +16,9 @@ var (
 	errNotPositive = errors.New("amount must be positive")
 )
 
-// NewAccount creates Account
-func NewAccount(owner string) *Account {
-	account := Account{owner: owner, balance: 0}
+// CreateAccount creates an account
+func CreateAccount(owner string, balance int) *Account {
+	account := Account{owner: owner, balance: balance}
 	return &account
 }
 

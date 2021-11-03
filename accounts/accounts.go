@@ -47,7 +47,7 @@ func (a *Account) deposit(amount int, c chan<- Account) {
 }
 
 // MassDeposit x amount to all accounts
-func MassDeposit(accounts []Account, amount int) ([]Account, error) {
+func MassDeposit(accounts []Account, amount int) (*[]Account, error) {
 	if amount <= 0 {
 		return nil, errNotPositive
 	}
@@ -60,7 +60,7 @@ func MassDeposit(accounts []Account, amount int) ([]Account, error) {
 		account := <-c
 		accountSlice = append(accountSlice, account)
 	}
-	return accountSlice, nil
+	return &accountSlice, nil
 }
 
 // Withdraw x amount from your account

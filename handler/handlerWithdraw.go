@@ -18,7 +18,7 @@ func handleWithdraw(c echo.Context) error {
 		return err
 	}
 	// search for an account
-	account, err := repository.SearchAccount(withdrawRequest.Owner)
+	account, err := repository.SearchAccount(withdrawRequest.Accountid)
 	if isBad, errBadReq := handleBadRequest(err, c); isBad {
 		return errBadReq
 	}

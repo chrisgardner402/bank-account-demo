@@ -23,12 +23,12 @@ func handleMassDeposit(c echo.Context) error {
 		return errBadReq
 	}
 	// search for mass account
-	accountSlice, err := repository.SearchMassAccount(massDepositRequest.Owner)
+	accountlist, err := repository.SearchMassAccount(massDepositRequest.Accountidlist)
 	if isBad, errBadReq := handleBadRequest(err, c); isBad {
 		return errBadReq
 	}
 	// execute mass deposit
-	err = repository.DepositMassAccount(accountSlice, massDepositRequest.Amount)
+	err = repository.DepositMassAccount(accountlist, massDepositRequest.Amount)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}

@@ -23,7 +23,7 @@ func handleDeposit(c echo.Context) error {
 		return errBadReq
 	}
 	// search for an account
-	account, err := repository.SearchAccount(depositRequest.Owner)
+	account, err := repository.SearchAccount(depositRequest.Accountid)
 	if isBad, errBadReq := handleBadRequest(err, c); isBad {
 		return errBadReq
 	}

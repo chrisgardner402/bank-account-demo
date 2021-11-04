@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/chrisgardner402/bank-account-demo/handler"
 	"github.com/chrisgardner402/bank-account-demo/repository"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -11,6 +14,9 @@ func main() {
 	// db
 	defer repository.Close()
 	repository.Open()
+
+	uuid, _ := uuid.NewUUID()
+	fmt.Println(uuid.String())
 
 	// echo
 	e := echo.New()

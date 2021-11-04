@@ -1,4 +1,4 @@
-package accounts
+package model
 
 import (
 	"errors"
@@ -7,8 +7,8 @@ import (
 
 // Account struct
 type Account struct {
-	owner   string
-	balance int
+	accountid string
+	balance   int
 }
 
 var (
@@ -17,14 +17,14 @@ var (
 )
 
 // CreateAccount creates an account
-func CreateAccount(owner string, balance int) *Account {
-	account := Account{owner: owner, balance: balance}
+func CreateAccount(accountid string, balance int) *Account {
+	account := Account{accountid: accountid, balance: balance}
 	return &account
 }
 
-// Owner of the account
-func (a Account) Owner() string {
-	return a.owner
+// Accountid of the account
+func (a Account) Accountid() string {
+	return a.accountid
 }
 
 // Balance of your account
@@ -39,26 +39,26 @@ func (a *Account) Deposit(amount int) error {
 	return nil
 }
 
-func (a *Account) deposit(amount int, c chan<- Account) {
+func (a *Account) deposit(amount int, accountC chan<- Account) {
 	a.balance += amount
-	c <- *a
+	accountC <- *a
 }
 
 // MassDeposit x amount to all accounts
-func MassDeposit(accounts []Account, amount int) (*[]Account, error) {
+func MassDeposit(accountlist []Account, amount int) (*[]Account, error) {
 	if err := checkAmount(amount); err != nil {
 		return nil, err
 	}
-	var accountSlice []Account
-	c := make(chan Account)
-	for i := 0; i < len(accounts); i++ {
-		go accounts[i].deposit(amount, c)
+	var accountlistReturn []Account
+	accountC := make(chan Account)
+	for i := 0; i < len(accountlist); i++ {
+		go accountlist[i].deposit(amount, accountC)
 	}
-	for i := 0; i < len(accounts); i++ {
-		account := <-c
-		accountSlice = append(accountSlice, account)
+	for i := 0; i < len(accountlist); i++ {
+		account := <-accountC
+		accountlistReturn = append(accountlistReturn, account)
 	}
-	return &accountSlice, nil
+	return &accountlistReturn, nil
 }
 
 // Withdraw x amount from your account
@@ -69,7 +69,7 @@ func (a *Account) Withdraw(amount int) error {
 }
 
 func (a Account) String() string {
-	return fmt.Sprint(a.Owner(), "'s account has: ", a.Balance())
+	return fmt.Sprint(a.Accountid(), " has: ", a.Balance())
 }
 
 func CheckDeposit(amount int) error {

@@ -13,8 +13,8 @@ create table account (
 create table history (
     accountid char(11),
     historyid char(36) primary key,
-    deposit integer,
-    withdraw integer,
+    deposit integer default 0,
+    withdraw integer default 0,
     historytime timestamp default current_timestamp not null,
     foreign key(accountid) references account(accountid)
 );

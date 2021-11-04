@@ -32,6 +32,11 @@ func handleDeposit(c echo.Context) error {
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
+	// save history
+	err = repository.SaveDepositHis(&account, depositRequest.Amount)
+	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
+		return errBadReq
+	}
 	// rendering
 	depositResponse := jsondata.DepositResponse{}
 	return c.JSON(http.StatusOK, depositResponse)

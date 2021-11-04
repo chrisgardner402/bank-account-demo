@@ -6,6 +6,15 @@
 - **POST** `/account/withdraw`
 - **POST** `/mass/deposit`
 
+## Req / Res Body
+- `./jsondata/jsondata.go`
+
+## Layer
+- __handler__ → __validate__ or __repository__ → __model__
+
+## Database
+- `./sqlite/bank.db`
+
 ## Version
 - Language : `Go` _v1.16_
 - Web Framework : `Echo` _v4.6.1_

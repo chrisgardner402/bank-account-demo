@@ -32,6 +32,11 @@ func handleWithdraw(c echo.Context) error {
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
+	// save history
+	err = repository.SaveWithdrawHis(&account, withdrawRequest.Amount)
+	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
+		return errBadReq
+	}
 	// rendering
 	withdrawResponse := jsondata.WithdrawResponse{}
 	return c.JSON(http.StatusOK, withdrawResponse)

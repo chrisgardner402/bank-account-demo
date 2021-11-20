@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/chrisgardner402/bank-account-demo/handler"
-	"github.com/chrisgardner402/bank-account-demo/repository"
+	"github.com/chrisgardner402/bank-account-demo/application/rest"
+	"github.com/chrisgardner402/bank-account-demo/infra/persistence/repository"
 	"github.com/labstack/echo/v4"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -14,9 +14,9 @@ func main() {
 
 	// echo
 	e := echo.New()
-	e.GET("/health", handler.HandleHealthCheck())
-	e.POST("/account/deposit", handler.HandleDeposit())
-	e.POST("/account/withdraw", handler.HandleWithdraw())
-	e.POST("/mass/deposit", handler.HandleMassDeposit())
+	rest.ControlHealthCheck(e)
+	rest.ControlDeposit(e)
+	rest.ControlWithdraw(e)
+	rest.ControlMassDeposit(e)
 	e.Logger.Fatal(e.Start(":1323"))
 }

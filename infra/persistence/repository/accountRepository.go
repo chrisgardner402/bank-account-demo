@@ -3,7 +3,7 @@ package repository
 import (
 	"log"
 
-	"github.com/chrisgardner402/bank-account-demo/model"
+	"github.com/chrisgardner402/bank-account-demo/domain/model"
 )
 
 // SearchAccount searches an account

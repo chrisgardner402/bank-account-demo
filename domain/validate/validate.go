@@ -1,6 +1,6 @@
 package validate
 
-import "github.com/chrisgardner402/bank-account-demo/model"
+import "github.com/chrisgardner402/bank-account-demo/domain/model"
 
 // ValidateDeposit validates deposit transaction
 func ValidateDeposit(amount int) error {

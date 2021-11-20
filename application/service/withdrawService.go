@@ -1,17 +1,18 @@
-package handler
+package service
 
 import (
 	"log"
 	"net/http"
 
-	"github.com/chrisgardner402/bank-account-demo/jsondata"
-	"github.com/chrisgardner402/bank-account-demo/repository"
-	"github.com/chrisgardner402/bank-account-demo/validate"
+	"github.com/chrisgardner402/bank-account-demo/application/request"
+	"github.com/chrisgardner402/bank-account-demo/application/response"
+	"github.com/chrisgardner402/bank-account-demo/domain/validate"
+	"github.com/chrisgardner402/bank-account-demo/infra/persistence/repository"
 	"github.com/labstack/echo/v4"
 )
 
-func handleWithdraw(c echo.Context) error {
-	withdrawRequest := new(jsondata.WithdrawRequest)
+func ServiceWithdraw(c echo.Context) error {
+	withdrawRequest := new(request.WithdrawRequest)
 	// binding
 	if err := c.Bind(withdrawRequest); err != nil {
 		log.Println(err)
@@ -38,6 +39,6 @@ func handleWithdraw(c echo.Context) error {
 		return errBadReq
 	}
 	// rendering
-	withdrawResponse := jsondata.WithdrawResponse{}
+	withdrawResponse := response.WithdrawResponse{}
 	return c.JSON(http.StatusOK, withdrawResponse)
 }

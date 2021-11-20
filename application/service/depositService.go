@@ -1,17 +1,18 @@
-package handler
+package service
 
 import (
 	"log"
 	"net/http"
 
-	"github.com/chrisgardner402/bank-account-demo/jsondata"
-	"github.com/chrisgardner402/bank-account-demo/repository"
-	"github.com/chrisgardner402/bank-account-demo/validate"
+	"github.com/chrisgardner402/bank-account-demo/application/request"
+	"github.com/chrisgardner402/bank-account-demo/application/response"
+	"github.com/chrisgardner402/bank-account-demo/domain/validate"
+	"github.com/chrisgardner402/bank-account-demo/infra/persistence/repository"
 	"github.com/labstack/echo/v4"
 )
 
-func handleDeposit(c echo.Context) error {
-	depositRequest := new(jsondata.DepositRequest)
+func ServiceDeposit(c echo.Context) error {
+	depositRequest := new(request.DepositRequest)
 	// binding
 	if err := c.Bind(&depositRequest); err != nil {
 		log.Println(err)
@@ -38,6 +39,6 @@ func handleDeposit(c echo.Context) error {
 		return errBadReq
 	}
 	// rendering
-	depositResponse := jsondata.DepositResponse{}
+	depositResponse := response.DepositResponse{}
 	return c.JSON(http.StatusOK, depositResponse)
 }

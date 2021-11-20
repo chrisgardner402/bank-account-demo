@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/chrisgardner402/bank-account-demo/model"
+	"github.com/chrisgardner402/bank-account-demo/domain/model"
 )
 
 // SaveDepositHis saves deposit history

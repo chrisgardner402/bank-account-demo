@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"log"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -15,7 +13,7 @@ var (
 
 // Open opens a database
 func Open() {
-	sqlite3Database, err := sql.Open("sqlite3", "./sqlite/bank.db")
+	sqlite3Database, err := sql.Open("sqlite3", "./infra/persistence/sqlite/bank.db")
 	db = sqlite3Database
 	exitErr(err)
 	log.Println("sqlite3 database opened")

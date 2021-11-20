@@ -1,8 +1,6 @@
 package repository
 
-import (
-	"github.com/chrisgardner402/bank-account-demo/model"
-)
+import "github.com/chrisgardner402/bank-account-demo/domain/model"
 
 // SearchMassAccount searches accounts
 func SearchMassAccount(accountidlist []string) (*[]model.Account, error) {

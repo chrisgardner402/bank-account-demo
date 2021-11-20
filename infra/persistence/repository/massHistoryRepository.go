@@ -1,6 +1,6 @@
 package repository
 
-import "github.com/chrisgardner402/bank-account-demo/model"
+import "github.com/chrisgardner402/bank-account-demo/domain/model"
 
 // SaveMassDepositHis saves histories for deposit transactions
 func SaveMassDepositHis(accountlist *[]model.Account, amount int) error {

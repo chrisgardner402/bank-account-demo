@@ -1,28 +1,36 @@
 # bank-account-demo
 
-## API
+## Architecture
+- Layered Architecture in DDD
+  - Application layer
+  - Domain model layer
+  - Infrastructure layer
+
+## API Endpoint
 - **GET** `/health`
 - **POST** `/account/deposit`
 - **POST** `/account/withdraw`
 - **POST** `/mass/deposit`
 
-## Req / Res Body
-- `./jsondata/jsondata.go`
+## Json Data
+- request body `./application/request`
+- response body `./application/response`
 
-## Layer
-- __handler__ → __validate__ or __repository__ → __model__
+## Web Server
+- Start API server
+  ```bash
+  go run main.go
+  ```
 
 ## Database
-- `./sqlite/bank.db`
+- schema path `./infra/persistence/sqlite`
+- connect database
+  ```
+  sqlite3 ./infra/persistence/sqlite/bank.db
+  ```
 
 ## Version
 - Language : `Go` _v1.16_
 - Web Framework : `Echo` _v4.6.1_
 - Database : `SQLite` _v3.32.3_
 - Database Driver : `go-sqlite3` _v1.14.9_
-
-## Usage
-- Start API server
-  ```bash
-  go run main.go
-  ```

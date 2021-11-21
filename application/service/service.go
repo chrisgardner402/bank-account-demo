@@ -8,8 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// handle bad request
-func handleBadRequest(err error, c echo.Context) (bool, error) {
+func handleBadReq(err error, c echo.Context) (bool, error) {
 	if errRes := returnErrRes(err); err != nil {
 		log.Println(http.StatusBadRequest, errRes)
 		return true, c.JSON(http.StatusBadRequest, errRes)
@@ -17,7 +16,6 @@ func handleBadRequest(err error, c echo.Context) (bool, error) {
 	return false, nil
 }
 
-// handle internal server error
 func handleIntlSrvErr(err error, c echo.Context) (bool, error) {
 	if errRes := returnErrRes(err); err != nil {
 		log.Println(http.StatusInternalServerError, errRes)
@@ -26,7 +24,6 @@ func handleIntlSrvErr(err error, c echo.Context) (bool, error) {
 	return false, nil
 }
 
-// return error response
 func returnErrRes(err error) response.ErrorResponse {
 	var errorResponse response.ErrorResponse
 	if err != nil {

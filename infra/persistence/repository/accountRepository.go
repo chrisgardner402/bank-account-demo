@@ -3,37 +3,56 @@ package repository
 import (
 	"log"
 
-	"github.com/chrisgardner402/bank-account-demo/domain/model"
+	"github.com/chrisgardner402/bank-account-demo/domain/aggregate"
+	"github.com/chrisgardner402/bank-account-demo/domain/entity"
+	"github.com/chrisgardner402/bank-account-demo/domain/factory"
+	"github.com/chrisgardner402/bank-account-demo/infra/persistence/mapper"
 )
 
-// SearchAccount searches an account
-func SearchAccount(accountid string) (model.Account, error) {
+func SearchAccount(account *entity.Account) (*entity.Account, error) {
 	// execute a query
-	row, err := db.Query("select accountid, balance from account where accountid=?", accountid)
+	row, err := mapper.SelectAccount(db, account.Accountid())
+	// check error
 	if err != nil {
-		return model.Account{}, err
+		return factory.CreateEmptyAccount(), err
 	}
 	// check row
 	defer row.Close()
 	if !row.Next() {
-		return model.Account{}, errNotFound
+		return factory.CreateEmptyAccount(), errNotFound
 	}
 	// create account object
+	var userid string
+	var accountid string
 	var balance int
-	row.Scan(&accountid, &balance)
-	account := *model.CreateAccount(accountid, balance)
-	return account, nil
+	err = row.Scan(&userid, &accountid, &balance)
+	if err != nil {
+		return factory.CreateEmptyAccount(), err
+	}
+	accountPersist := factory.CreateAccount(userid, accountid, balance)
+	return accountPersist, nil
 }
 
-// DepositAccount updates an account for deposit transaction
-func DepositAccount(account *model.Account, amount int) error {
-	// before deposit
-	err := account.Deposit(amount)
+func SearchMassAccount(accountSlice *[]entity.Account) (*[]entity.Account, error) {
+	var accountSlicePersist []entity.Account
+	for _, account := range *accountSlice {
+		accountPersist, err := SearchAccount(&account)
+		if err != nil {
+			return nil, err
+		}
+		accountSlicePersist = append(accountSlicePersist, *accountPersist)
+	}
+	return &accountSlicePersist, nil
+}
+
+func DepositAccount(deposit *aggregate.Deposit) error {
+	// create and execute a statement
+	res, err := mapper.UpdateAccountForDeposit(db, deposit.Amount(), deposit.Account())
 	if err != nil {
 		return err
 	}
-	// update the account
-	affect, err := updateAccount(account)
+	// get the number of rows affected
+	affect, err := res.RowsAffected()
 	if err != nil {
 		return err
 	}
@@ -41,37 +60,27 @@ func DepositAccount(account *model.Account, amount int) error {
 	return nil
 }
 
-// WithdrawAccount updates an account for withdraw transaction
-func WithdrawAccount(account *model.Account, amount int) error {
-	// before withdraw
-	err := account.Withdraw(amount)
+func DepositMassAccount(depositSlice *[]aggregate.Deposit) error {
+	for _, deposit := range *depositSlice {
+		err := DepositAccount(&deposit)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func WithdrawAccount(withdarw *aggregate.Withdraw) error {
+	// create and execute a statement
+	res, err := mapper.UpdateAccountForWithdraw(db, withdarw.Amount(), withdarw.Account())
 	if err != nil {
 		return err
 	}
-	// update the account
-	affect, err := updateAccount(account)
+	// get the number of rows affected
+	affect, err := res.RowsAffected()
 	if err != nil {
 		return err
 	}
 	log.Println("withdraw account affect:", affect)
 	return nil
-}
-
-// update an account
-func updateAccount(account *model.Account) (int64, error) {
-	// create a statement
-	stmt, err := db.Prepare("update account set balance=? where accountid=?")
-	if err != nil {
-		return 0, err
-	}
-	// execute a statement
-	res, err := stmt.Exec(account.Balance(), account.Accountid())
-	if err != nil {
-		return 0, err
-	}
-	affect, err := res.RowsAffected()
-	if err != nil {
-		return 0, err
-	}
-	return affect, nil
 }

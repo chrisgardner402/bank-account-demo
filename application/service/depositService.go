@@ -6,39 +6,49 @@ import (
 
 	"github.com/chrisgardner402/bank-account-demo/application/request"
 	"github.com/chrisgardner402/bank-account-demo/application/response"
-	"github.com/chrisgardner402/bank-account-demo/domain/validate"
+	"github.com/chrisgardner402/bank-account-demo/domain/factory"
 	"github.com/chrisgardner402/bank-account-demo/infra/persistence/repository"
 	"github.com/labstack/echo/v4"
 )
 
 func ServiceDeposit(c echo.Context) error {
+	// data binding
 	depositRequest := new(request.DepositRequest)
-	// binding
 	if err := c.Bind(&depositRequest); err != nil {
 		log.Println(err)
 		return err
 	}
-	// validate request
-	err := validate.ValidateDeposit(depositRequest.Amount)
-	if isBad, errBadReq := handleBadRequest(err, c); isBad {
+
+	// ----- business logic start -----
+	// create account and search for
+	account := factory.CreateAccountFromAccountid(depositRequest.Accountid)
+	accountPersist, err := repository.SearchAccount(account)
+	if isBad, errBadReq := handleBadReq(err, c); isBad {
 		return errBadReq
 	}
-	// search for an account
-	account, err := repository.SearchAccount(depositRequest.Accountid)
-	if isBad, errBadReq := handleBadRequest(err, c); isBad {
+	// create deposit and validate request
+	deposit := factory.CreateDeposit(accountPersist, depositRequest.Amount)
+	err = deposit.ValidateDeposit()
+	if isBad, errBadReq := handleBadReq(err, c); isBad {
 		return errBadReq
 	}
 	// execute deposit
-	err = repository.DepositAccount(&account, depositRequest.Amount)
+	err = repository.DepositAccount(deposit)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
-	// save history
-	err = repository.SaveDepositHis(&account, depositRequest.Amount)
+	// create history and record
+	history, err := factory.CreateDepositHistory(deposit)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
-	// rendering
-	depositResponse := response.DepositResponse{}
+	err = repository.RecordHistory(history)
+	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
+		return errBadReq
+	}
+	// ----- business logic end -----
+
+	// data rendering
+	depositResponse := new(response.DepositResponse)
 	return c.JSON(http.StatusOK, depositResponse)
 }

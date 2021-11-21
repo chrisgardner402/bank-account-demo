@@ -6,39 +6,51 @@ import (
 
 	"github.com/chrisgardner402/bank-account-demo/application/request"
 	"github.com/chrisgardner402/bank-account-demo/application/response"
-	"github.com/chrisgardner402/bank-account-demo/domain/validate"
+	"github.com/chrisgardner402/bank-account-demo/domain/factory"
 	"github.com/chrisgardner402/bank-account-demo/infra/persistence/repository"
 	"github.com/labstack/echo/v4"
 )
 
 func ServiceMassDeposit(c echo.Context) error {
+	// data binding
 	massDepositRequest := new(request.MassDepositRequest)
-	// binding
 	if err := c.Bind(&massDepositRequest); err != nil {
 		log.Println(err)
 		return err
 	}
-	// validate request
-	err := validate.ValidateDeposit(massDepositRequest.Amount)
-	if isBad, errBadReq := handleBadRequest(err, c); isBad {
+
+	// ----- business logic start -----
+	// create account slice and search for
+	accountSlice := factory.CreateAccountSliceFromAccountid(massDepositRequest.Accountidlist)
+	accountSlicePersist, err := repository.SearchMassAccount(accountSlice)
+	if isBad, errBadReq := handleBadReq(err, c); isBad {
 		return errBadReq
 	}
-	// search for mass account
-	accountlist, err := repository.SearchMassAccount(massDepositRequest.Accountidlist)
-	if isBad, errBadReq := handleBadRequest(err, c); isBad {
-		return errBadReq
+	// create deposit slice and validate request
+	depositSlice := factory.CreateDepositSlice(accountSlicePersist, massDepositRequest.Amount)
+	for _, deposit := range *depositSlice {
+		err := deposit.ValidateDeposit()
+		if isBad, errBadReq := handleBadReq(err, c); isBad {
+			return errBadReq
+		}
 	}
-	// execute mass deposit
-	err = repository.DepositMassAccount(accountlist, massDepositRequest.Amount)
+	// execute deposit slice
+	err = repository.DepositMassAccount(depositSlice)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
-	// save history
-	err = repository.SaveMassDepositHis(accountlist, massDepositRequest.Amount)
+	// create history slice and record
+	historySlice, err := factory.CreateDepositHistorySlice(depositSlice)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
-	// rendering
-	massDepositResponse := response.MassDepositReponse{}
+	err = repository.RecordMassHistory(historySlice)
+	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
+		return errBadReq
+	}
+	// ----- business logic end -----
+
+	// data rendering
+	massDepositResponse := new(response.MassDepositReponse)
 	return c.JSON(http.StatusOK, massDepositResponse)
 }

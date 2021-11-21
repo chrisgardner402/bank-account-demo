@@ -5,7 +5,25 @@
   - Application layer
   - Domain model layer
   - Infrastructure layer
-
+- Project Layout
+  ```
+  .
+  ├─ application
+  │  ├─ request
+  │  ├─ response
+  │  ├─ rest
+  │  └─ service
+  ├─ domain
+  │  ├─ aggregate
+  │  ├─ entity
+  │  ├─ factory
+  │  └─ valueobject
+  └─ infra
+     └─ persistence
+        ├─ mapper
+        ├─ repository
+        └─ sqlite
+  ```
 ## API Endpoint
 - **GET** `/health`
 - **POST** `/account/deposit`

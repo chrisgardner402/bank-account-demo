@@ -1,54 +1,53 @@
 # bank-account-demo
 
 ## Architecture
-- Layered Architecture in DDD
+- Layered architecture using DDD(Domain-Driven Design)
   - Application layer
   - Domain model layer
   - Infrastructure layer
-- Project Layout
+- Project layout
   ```
   .
   ├─ application
   │  ├─ request
   │  ├─ response
-  │  ├─ rest
   │  └─ service
   ├─ domain
   │  ├─ aggregate
   │  ├─ entity
   │  ├─ factory
+  │  ├─ repository
   │  └─ valueobject
-  └─ infra
-     └─ persistence
-        ├─ mapper
-        ├─ repository
-        └─ sqlite
+  └─ infrastructure
+     ├─ persistence
+     └─ sqlite
   ```
+
 ## API Endpoint
 - **GET** `/health`
 - **POST** `/account/deposit`
 - **POST** `/account/withdraw`
 - **POST** `/mass/deposit`
 
-## Json Data
-- request body `./application/request`
-- response body `./application/response`
+## Req/Res Data
+- Request body `./application/request`
+- Response body `./application/response`
 
 ## Web Server
-- Start API server
+- Start web server
   ```bash
   go run main.go
   ```
 
 ## Database
-- schema path `./infra/persistence/sqlite`
-- connect database
-  ```
-  sqlite3 ./infra/persistence/sqlite/bank.db
+- Schema path `./infrastructure/sqlite`
+- Connect database
+  ```bash
+  sqlite3 ./infrastructure/sqlite/bank.db
   ```
 
 ## Version
 - Language : `Go` _v1.16_
-- Web Framework : `Echo` _v4.6.1_
+- Web framework : `Echo` _v4.6.1_
 - Database : `SQLite` _v3.32.3_
-- Database Driver : `go-sqlite3` _v1.14.9_
+- Database driver : `go-sqlite3` _v1.14.9_

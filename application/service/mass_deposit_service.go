@@ -7,11 +7,27 @@ import (
 	"github.com/chrisgardner402/bank-account-demo/application/request"
 	"github.com/chrisgardner402/bank-account-demo/application/response"
 	"github.com/chrisgardner402/bank-account-demo/domain/factory"
-	"github.com/chrisgardner402/bank-account-demo/infra/persistence/repository"
+	"github.com/chrisgardner402/bank-account-demo/domain/repository"
+
 	"github.com/labstack/echo/v4"
 )
 
-func ServiceMassDeposit(c echo.Context) error {
+func NewMassDepositService(ar repository.AccountRepository, hr repository.HistoryRepository) MassDepositService {
+	return &massDepositService{
+		accountRepository: ar,
+		historyRepository: hr}
+}
+
+type MassDepositService interface {
+	ServiceMassDeposit(c echo.Context) error
+}
+
+type massDepositService struct {
+	accountRepository repository.AccountRepository
+	historyRepository repository.HistoryRepository
+}
+
+func (mds massDepositService) ServiceMassDeposit(c echo.Context) error {
 	// data binding
 	massDepositRequest := new(request.MassDepositRequest)
 	if err := c.Bind(&massDepositRequest); err != nil {
@@ -22,7 +38,7 @@ func ServiceMassDeposit(c echo.Context) error {
 	// ----- business logic start -----
 	// create account slice and search for
 	accountSlice := factory.CreateAccountSliceFromAccountid(massDepositRequest.Accountidlist)
-	accountSlicePersist, err := repository.SearchMassAccount(accountSlice)
+	accountSlicePersist, err := mds.accountRepository.SearchMassAccount(accountSlice)
 	if isBad, errBadReq := handleBadReq(err, c); isBad {
 		return errBadReq
 	}
@@ -35,7 +51,7 @@ func ServiceMassDeposit(c echo.Context) error {
 		}
 	}
 	// execute deposit slice
-	err = repository.DepositMassAccount(depositSlice)
+	err = mds.accountRepository.DepositMassAccount(depositSlice)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
@@ -44,7 +60,7 @@ func ServiceMassDeposit(c echo.Context) error {
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
-	err = repository.RecordMassHistory(historySlice)
+	err = mds.historyRepository.RecordMassHistory(historySlice)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}

@@ -7,11 +7,27 @@ import (
 	"github.com/chrisgardner402/bank-account-demo/application/request"
 	"github.com/chrisgardner402/bank-account-demo/application/response"
 	"github.com/chrisgardner402/bank-account-demo/domain/factory"
-	"github.com/chrisgardner402/bank-account-demo/infra/persistence/repository"
+	"github.com/chrisgardner402/bank-account-demo/domain/repository"
+
 	"github.com/labstack/echo/v4"
 )
 
-func ServiceDeposit(c echo.Context) error {
+func NewDepositService(ar repository.AccountRepository, hr repository.HistoryRepository) DepositService {
+	return &depositService{
+		accountRepository: ar,
+		historyRepository: hr}
+}
+
+type DepositService interface {
+	ServiceDeposit(c echo.Context) error
+}
+
+type depositService struct {
+	accountRepository repository.AccountRepository
+	historyRepository repository.HistoryRepository
+}
+
+func (ds depositService) ServiceDeposit(c echo.Context) error {
 	// data binding
 	depositRequest := new(request.DepositRequest)
 	if err := c.Bind(&depositRequest); err != nil {
@@ -22,7 +38,7 @@ func ServiceDeposit(c echo.Context) error {
 	// ----- business logic start -----
 	// create account and search for
 	account := factory.CreateAccountFromAccountid(depositRequest.Accountid)
-	accountPersist, err := repository.SearchAccount(account)
+	accountPersist, err := ds.accountRepository.SearchAccount(account)
 	if isBad, errBadReq := handleBadReq(err, c); isBad {
 		return errBadReq
 	}
@@ -33,7 +49,7 @@ func ServiceDeposit(c echo.Context) error {
 		return errBadReq
 	}
 	// execute deposit
-	err = repository.DepositAccount(deposit)
+	err = ds.accountRepository.DepositAccount(deposit)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
@@ -42,7 +58,7 @@ func ServiceDeposit(c echo.Context) error {
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
-	err = repository.RecordHistory(history)
+	err = ds.historyRepository.RecordHistory(history)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}

@@ -7,11 +7,27 @@ import (
 	"github.com/chrisgardner402/bank-account-demo/application/request"
 	"github.com/chrisgardner402/bank-account-demo/application/response"
 	"github.com/chrisgardner402/bank-account-demo/domain/factory"
-	"github.com/chrisgardner402/bank-account-demo/infra/persistence/repository"
+	"github.com/chrisgardner402/bank-account-demo/domain/repository"
+
 	"github.com/labstack/echo/v4"
 )
 
-func ServiceWithdraw(c echo.Context) error {
+func NewWithdrawService(ar repository.AccountRepository, hr repository.HistoryRepository) WithdrawService {
+	return &withdrawService{
+		accountRepository: ar,
+		historyRepository: hr}
+}
+
+type WithdrawService interface {
+	ServiceWithdraw(c echo.Context) error
+}
+
+type withdrawService struct {
+	accountRepository repository.AccountRepository
+	historyRepository repository.HistoryRepository
+}
+
+func (ws withdrawService) ServiceWithdraw(c echo.Context) error {
 	// data binding
 	withdrawRequest := new(request.WithdrawRequest)
 	if err := c.Bind(withdrawRequest); err != nil {
@@ -22,7 +38,7 @@ func ServiceWithdraw(c echo.Context) error {
 	// ----- business logic start -----
 	// create account and search for
 	account := factory.CreateAccountFromAccountid(withdrawRequest.Accountid)
-	accountPersist, err := repository.SearchAccount(account)
+	accountPersist, err := ws.accountRepository.SearchAccount(account)
 	if isBad, errBadReq := handleBadReq(err, c); isBad {
 		return errBadReq
 	}
@@ -33,7 +49,7 @@ func ServiceWithdraw(c echo.Context) error {
 		return errBadReq
 	}
 	// execute withdraw
-	err = repository.WithdrawAccount(withdraw)
+	err = ws.accountRepository.WithdrawAccount(withdraw)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
@@ -42,7 +58,7 @@ func ServiceWithdraw(c echo.Context) error {
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
-	err = repository.RecordHistory(history)
+	err = ws.historyRepository.RecordHistory(history)
 	if isBad, errBadReq := handleIntlSrvErr(err, c); isBad {
 		return errBadReq
 	}
